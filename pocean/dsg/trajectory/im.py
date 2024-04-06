@@ -132,12 +132,19 @@ class IncompleteMultidimensionalTrajectory(CFDataset):
             nc.createDimension(daxes.sample, max_obs)
 
             num_trajectories = len(trajectory_group)
+            #breakpoint()
             if reduce_dims is True and num_trajectories == 1:
                 # If a singular trajectory, we can reduce that dimension if it is of size 1
                 def ts(t_index, size):
                     return np.s_[0:size]
                 default_dimensions = (daxes.sample,)
-                trajectory = nc.createVariable(axes.trajectory, get_dtype(df[axes.trajectory]))
+                # To support the IOOS netCDF specification, if traj_strlen is specified
+                # use a char array for the trajectory variable with a dimension traj_strlen.
+                if 'traj_strlen' in kwargs:
+                    nc.createDimension('traj_strlen', kwargs['traj_strlen'])
+                    trajectory = nc.createVariable(axes.trajectory, 'S1', ('traj_strlen',))
+                else:
+                    trajectory = nc.createVariable(axes.trajectory, get_dtype(df[axes.trajectory]))
             else:
                 def ts(t_index, size):
                     return np.s_[t_index, 0:size]
