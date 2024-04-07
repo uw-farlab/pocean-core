@@ -72,9 +72,6 @@ class TestContinousRaggedTrajectoryProfile(unittest.TestCase):
         }
         fid, tmpnc = tempfile.mkstemp(suffix='.nc')
         with ContiguousRaggedTrajectoryProfile(self.multi) as ncd:
-            # https://stackoverflow.com/questions/60161759/valueerror-big-endian-buffer-not-supported-on-little-endian-compiler
-            if ncd.dtype.byteorder == '>':
-                ncd = ncd.byteswap().newbyteorder()
             df = ncd.to_dataframe(axes=axes)
             with ContiguousRaggedTrajectoryProfile.from_dataframe(df, tmpnc, axes=axes) as result_ncd:
                 assert 'profile' in result_ncd.dimensions
