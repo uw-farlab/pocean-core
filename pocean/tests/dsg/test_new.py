@@ -7,18 +7,18 @@ import pytest
 
 from pocean import logger
 from pocean.cf import CFDataset
-from pocean.dsg import \
-    ContiguousRaggedTrajectory, \
-    ContiguousRaggedTrajectoryProfile, \
-    IncompleteMultidimensionalProfile, \
-    IncompleteMultidimensionalTimeseries, \
-    IncompleteMultidimensionalTrajectory, \
-    IncompleteMultidimensionalTimeseriesProfile, \
-    OrthogonalMultidimensionalProfile, \
-    OrthogonalMultidimensionalTimeseries, \
-    OrthogonalMultidimensionalTimeseriesProfile, \
-    RaggedTimeseriesProfile
-
+from pocean.dsg import (
+    ContiguousRaggedTrajectory,
+    ContiguousRaggedTrajectoryProfile,
+    IncompleteMultidimensionalProfile,
+    IncompleteMultidimensionalTimeseries,
+    IncompleteMultidimensionalTimeseriesProfile,
+    IncompleteMultidimensionalTrajectory,
+    OrthogonalMultidimensionalProfile,
+    OrthogonalMultidimensionalTimeseries,
+    OrthogonalMultidimensionalTimeseriesProfile,
+    RaggedTimeseriesProfile,
+)
 from pocean.utils import all_subclasses
 
 logger.level = logging.INFO

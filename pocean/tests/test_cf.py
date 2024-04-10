@@ -2,8 +2,9 @@
 # coding=utf-8
 import logging
 import os
-import pytest
 import unittest
+
+import pytest
 
 from pocean import logger as L
 from pocean.cf import CFDataset
