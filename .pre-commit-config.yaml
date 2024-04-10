@@ -26,3 +26,14 @@ repos:
   rev: "0.12.1"
   hooks:
     - id: pyproject-fmt
+
+# flake8 pep checks
+- repo: https://github.com/pre-commit/pre-commit-hooks
+  rev: v3.0.1
+  hooks:
+  - id: flake8
+    args: # arguments to configure flake8
+      - "--max-line-length=100"
+      # These folders will be excluded
+      - "--exclude=docs,.git,__pycache__,dist"
+      - "--ignore=E265,E501,E221,E251,E203,E201,E124,E202,E241,E251,W293,W291"
