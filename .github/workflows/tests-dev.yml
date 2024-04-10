@@ -4,17 +4,16 @@ on:
   pull_request:
   push:
     branches:
-      - 'uwdev'
-      - 'uwmain'
       - 'fixendian'
+      - 'uwdev'
 
 jobs:
   run:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        python-version: ["3.9", "3.10", "3.11"]
-        os: [windows-latest, ubuntu-latest, macos-latest]
+        python-version: ["3.10", "3.11", "3.12"]
+        os: [ubuntu-latest]
       fail-fast: false
 
     steps:
@@ -23,7 +22,7 @@ jobs:
         fetch-depth: 0
 
     - name: Setup Micromamba Python ${{ matrix.python-version }}
-      uses: mamba-org/setup-micromamba@v1
+      uses: mamba-org/setup-micromamba@v3
       with:
         environment-name: TEST
         init-shell: bash
