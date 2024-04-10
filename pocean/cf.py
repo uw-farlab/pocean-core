@@ -37,7 +37,7 @@ class CFDataset(EnhancedDataset):
 
         """
 
-        breakpoint()
+        #breakpoint()
         if not is_url(path):
             path = os.path.realpath(path)
 
