@@ -327,6 +327,15 @@ class ContiguousRaggedTrajectoryProfile(CFDataset):
 
         # Drop all data columns with no data
         if clean_cols:
+            # ValueError: Big-endian buffer not supported on little-endian compiler
+            # https://stackoverflow.com/questions/60161759/valueerror-big-endian-buffer-not-supported-on-little-endian-compiler
+            # Some columns are Big-endian and need to be converted prior to use
+            for e in df.dtypes.items():
+                vrb = e[0]
+                if e[1].str[0] == '>':
+                    # Convert big-endian value
+                    dt = e[1].str[1:]
+                    df[vrb] = df[vrb].astype(dt)
             df = df.dropna(axis=1, how='all')
 
         # Drop all data rows with no data variable data

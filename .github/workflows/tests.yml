@@ -6,7 +6,17 @@ on:
     branches: [main]
 
 jobs:
+  pre-commit:
+    runs-on: ubuntu-22.04
+    steps:
+    - uses: actions/checkout@v3
+    - uses: actions/setup-python@v2
+    - uses: pre-commit/action@v3.0.1
+      with:
+        extra_args: flake8 --ignore=E265,E501,E221,E251,E203,E201,E124,E202,E241,E251,W293,W291
+
   run:
+    needs: [pre-commit]
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
