@@ -1,5 +1,4 @@
 #!python
-# coding=utf-8
 import logging
 import os
 import unittest
@@ -11,11 +10,12 @@ from pocean.dsg import OrthogonalMultidimensionalTimeseries as omt
 L.level = logging.INFO
 L.handlers = [logging.StreamHandler()]
 
-
 class TestCFDatasetLoad(unittest.TestCase):
 
     def test_load_url(self):
-        ncd = CFDataset.load('https://geoport.whoi.edu/thredds/dodsC/usgs/data2/emontgomery/stellwagen/CF-1.6/ARGO_MERCHANT/1211-AA.cdf')
+        # File downloaded from https://geoport.usgs.esipfed.org/thredds/dodsC/silt/usgs/Projects/stellwagen/CF-1.6/ARGO_MERCHANT/1211-AA.cdf.html
+        fname = os.path.join(os.path.dirname(__file__), 'resources', '1211-AA.cdf')
+        ncd = CFDataset.load(fname)
         assert omt.is_mine(ncd) is True
         ncd.close()
 

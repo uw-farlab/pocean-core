@@ -1,3 +1,4 @@
 flake8
+pooch
 pre-commit
 pytest
