@@ -48,7 +48,7 @@ def nativize_times(df):
         try:
             # datetime64 columns will not raise here
             if df[column].dt.tz is not None:
-                df[column] = df[column].dt.tz_convert('UTC').dt.tz_convert(None)
+                df[column] = df[column].dt.tz_convert("UTC").dt.tz_convert(None)
         except AttributeError:
             pass
 
@@ -81,7 +81,7 @@ def get_default_axes(axes=None):
 
     axes = axes.copy()
     # Sample is only a dimension to remove from duplicate calc
-    sample_dim = axes.pop('sample', 'obs')
+    sample_dim = axes.pop("sample", "obs")
 
     # Make sure there are no duplicate values for axis names
     counts = Counter(axes.values())
@@ -90,25 +90,23 @@ def get_default_axes(axes=None):
             raise ValueError("Axis value '{}' appears twice.".format(v))
 
     default_axes = {
-        'trajectory': 'trajectory',
-        'station':    'station',
-        'profile':    'profile',
-        'sample':     sample_dim,
-        't':          't',
-        'x':          'x',
-        'y':          'y',
-        'z':          'z',
+        "trajectory": "trajectory",
+        "station": "station",
+        "profile": "profile",
+        "sample": sample_dim,
+        "t": "t",
+        "x": "x",
+        "y": "y",
+        "z": "z",
     }
 
     return namedtuple_with_defaults(
-        'AxisDefaults',
-        'trajectory station profile sample t x y z',
-        default_axes
+        "AxisDefaults", "trajectory station profile sample t x y z", default_axes
     )(**axes)
 
 
 def all_subclasses(cls, skips=None):
-    """ Recursively generate of all the subclasses of class cls. """
+    """Recursively generate of all the subclasses of class cls."""
     if skips is None:
         skips = []
 
@@ -145,17 +143,18 @@ def normalize_array(var):
         # Python 3 returns false for np.issubdtype(var.dtype, 'S1')
         return var[:]
 
-    elif hasattr(var.dtype, 'kind') and var.dtype.kind in ['U', 'S']:
-
+    elif hasattr(var.dtype, "kind") and var.dtype.kind in ["U", "S"]:
         if var.size == 1:
             return var[:]
 
-        if var.dtype.kind == 'S':
+        if var.dtype.kind == "S":
+
             def decoder(x):
-                if hasattr(x, 'decode'):
-                    return str(x.decode('utf-8'))
+                if hasattr(x, "decode"):
+                    return str(x.decode("utf-8"))
                 else:
                     return str(x)
+
             vfunc = np.vectorize(decoder)
             return vfunc(nc4.chartostring(var[:]))
         else:
@@ -170,10 +169,10 @@ def normalize_countable_array(cvar, count_if_none=None):
         p = normalize_array(cvar)
         if isinstance(p, str):
             p = np.asarray([p], dtype=str)
-        elif hasattr(p, 'mask') and np.all(p.mask == True):  # noqa
-            raise ValueError('All countable values were masked!')
+        elif hasattr(p, "mask") and np.all(p.mask == True):  # noqa
+            raise ValueError("All countable values were masked!")
     except BaseException:
-        L.warning('Could not pull a countable array... using a calculated index')
+        L.warning("Could not pull a countable array... using a calculated index")
         if cvar is None and count_if_none is not None:
             p = np.asarray(list(range(int(count_if_none))), dtype=np.integer)
         else:
@@ -204,7 +203,7 @@ def generic_masked(arr, attrs=None, minv=None, maxv=None, mask_nan=True):
     elif safe_issubdtype(arr.dtype, np.floating):
         ifunc = np.finfo
     else:
-        if arr.dtype.kind in ['U', 'S']:
+        if arr.dtype.kind in ["U", "S"]:
             mask_nan = False
 
         if mask_nan is True:
@@ -214,12 +213,12 @@ def generic_masked(arr, attrs=None, minv=None, maxv=None, mask_nan=True):
 
     attrs = attrs or {}
 
-    if 'valid_min' in attrs:
-        minv = safe_attribute_typing(arr.dtype, attrs['valid_min'])
-    if 'valid_max' in attrs:
-        maxv = safe_attribute_typing(arr.dtype, attrs['valid_max'])
-    if 'valid_range' in attrs:
-        vr = attrs['valid_range']
+    if "valid_min" in attrs:
+        minv = safe_attribute_typing(arr.dtype, attrs["valid_min"])
+    if "valid_max" in attrs:
+        maxv = safe_attribute_typing(arr.dtype, attrs["valid_max"])
+    if "valid_range" in attrs:
+        vr = attrs["valid_range"]
         minv = safe_attribute_typing(arr.dtype, vr[0])
         maxv = safe_attribute_typing(arr.dtype, vr[1])
 
@@ -244,11 +243,7 @@ def generic_masked(arr, attrs=None, minv=None, maxv=None, mask_nan=True):
         # You can't use `masked_outside` with nan values or numpy will send a warning
         not_nan = ~np.isnan(arr)
         not_nan = not_nan.filled(True)
-        arr[not_nan] = np.ma.masked_outside(
-            arr[not_nan],
-            minv,
-            maxv
-        )
+        arr[not_nan] = np.ma.masked_outside(arr[not_nan], minv, maxv)
         return arr
 
 
@@ -257,35 +252,36 @@ def pyscalar(val):
 
 
 def get_fill_value(var):
-    if hasattr(var, 'missing_value'):
+    if hasattr(var, "missing_value"):
         return var.missing_value
-    elif hasattr(var, '_FillValue'):
+    elif hasattr(var, "_FillValue"):
         return var._FillValue
     return None
 
 
 def create_ncvar_from_series(ncd, var_name, dimensions, series, **kwargs):
     from pocean.cf import CFDataset
+
     kwargs["zlib"] = kwargs.get("zlib", True)
     kwargs["complevel"] = kwargs.get("complevel", 1)
 
     if safe_issubdtype(series.dtype, np.datetime64):
         # Datetimes always saved as float64
-        fv = np.dtype('f8').type(CFDataset.default_fill_value)
-        v = ncd.createVariable(var_name, 'f8', dimensions, fill_value=fv, **kwargs)
+        fv = np.dtype("f8").type(CFDataset.default_fill_value)
+        v = ncd.createVariable(var_name, "f8", dimensions, fill_value=fv, **kwargs)
         v.units = CFDataset.default_time_unit
-        v.calendar = 'standard'
-    elif series.dtype.kind in ['U', 'S'] or series.dtype in [str]:
+        v.calendar = "standard"
+    elif series.dtype.kind in ["U", "S"] or series.dtype in [str]:
         # AttributeError: cannot set _FillValue attribute for VLEN or compound variable
         v = ncd.createVariable(var_name, get_dtype(series), dimensions, **kwargs)
     elif series.dtype == object:
         # Try to downcast to an int and then just take the type of the result
         # If we can't convert to a numeric use a string
         try:
-            filled_down = pd.to_numeric(series.fillna(0), downcast='integer')
+            filled_down = pd.to_numeric(series.fillna(0), downcast="integer")
             # Catch boolean values... to_numeric() results in boolean for True / False
             if safe_issubdtype(filled_down.dtype, np.bool_):
-                raise ValueError('datatype error: boolean needs to be converted to string')
+                raise ValueError("datatype error: boolean needs to be converted to string")
         except BaseException:
             # Fall back to a string type
             kwargs.update({"zlib": False})
@@ -296,7 +292,7 @@ def create_ncvar_from_series(ncd, var_name, dimensions, series, **kwargs):
                 get_dtype(filled_down),
                 dimensions,
                 fill_value=filled_down.dtype.type(CFDataset.default_fill_value),
-                **kwargs
+                **kwargs,
             )
     else:
         v = ncd.createVariable(
@@ -304,7 +300,7 @@ def create_ncvar_from_series(ncd, var_name, dimensions, series, **kwargs):
             get_dtype(series),
             dimensions,
             fill_value=series.dtype.type(CFDataset.default_fill_value),
-            **kwargs
+            **kwargs,
         )
 
     return v
@@ -318,8 +314,8 @@ def get_ncdata_from_series(series, ncvar, fillna=True):
     from pocean.cf import CFDataset
 
     if safe_issubdtype(series.dtype, np.datetime64):
-        units = getattr(ncvar, 'units', CFDataset.default_time_unit)
-        calendar = getattr(ncvar, 'calendar', 'standard')
+        units = getattr(ncvar, "units", CFDataset.default_time_unit)
+        calendar = getattr(ncvar, "calendar", "standard")
         nums = np.array([_safe_date2num(dtime, units=units, calendar=calendar) for dtime in series])
         return np.ma.masked_invalid(nums)
     else:
@@ -335,12 +331,12 @@ def get_masked_datetime_array(t, tvar, mask_nan=True):
     if isinstance(t, np.ma.core.MaskedConstant):
         return t
     elif np.isscalar(t):
-        return num2date(t, tvar.units, getattr(tvar, 'calendar', 'standard'))
+        return num2date(t, tvar.units, getattr(tvar, "calendar", "standard"))
 
     if mask_nan is True:
         t = np.ma.masked_invalid(t)
 
-    t_cal = getattr(tvar, 'calendar', 'standard')
+    t_cal = getattr(tvar, "calendar", "standard")
 
     # Get the min value we can have and mask anything else
     # This is limited by **python** datetime objects and not
@@ -352,7 +348,7 @@ def get_masked_datetime_array(t, tvar, mask_nan=True):
 
     dts = num2pydate(t, tvar.units, t_cal)
     if isinstance(dts, (datetime, cfdt)):
-        dts = np.array([dts.isoformat()], dtype='datetime64')
+        dts = np.array([dts.isoformat()], dtype="datetime64")
 
     return dts
 
@@ -361,7 +357,7 @@ def get_mapped_axes_variables(ncd, axes=None, skip=None):
     axes = get_default_axes(axes or {})
     skip = skip or []
 
-    ax = namedtuple('AxisVariables', 'trajectory station profile t x y z')
+    ax = namedtuple("AxisVariables", "trajectory station profile t x y z")
 
     # T
     if axes.t in ncd.variables:
@@ -397,7 +393,7 @@ def get_mapped_axes_variables(ncd, axes=None, skip=None):
         rvar = ncd.variables[axes.trajectory]
     else:
         try:
-            rvar = ncd.filter_by_attrs(cf_role='trajectory_id')[0]
+            rvar = ncd.filter_by_attrs(cf_role="trajectory_id")[0]
         except IndexError:
             rvar = None
 
@@ -408,7 +404,7 @@ def get_mapped_axes_variables(ncd, axes=None, skip=None):
         pvar = ncd.variables[axes.profile]
     else:
         try:
-            pvar = ncd.filter_by_attrs(cf_role='profile_id')[0]
+            pvar = ncd.filter_by_attrs(cf_role="profile_id")[0]
         except IndexError:
             pvar = None
 
@@ -419,28 +415,20 @@ def get_mapped_axes_variables(ncd, axes=None, skip=None):
         svar = ncd.variables[axes.station]
     else:
         try:
-            svar = ncd.filter_by_attrs(cf_role='timeseries_id')[0]
+            svar = ncd.filter_by_attrs(cf_role="timeseries_id")[0]
         except IndexError:
             svar = None
 
-    return ax(
-        rvar,
-        svar,
-        pvar,
-        tvar,
-        xvar,
-        yvar,
-        zvar
-    )
+    return ax(rvar, svar, pvar, tvar, xvar, yvar, zvar)
 
 
 def get_dtype(obj):
-    if hasattr(obj, 'dtype'):
+    if hasattr(obj, "dtype"):
         if obj.dtype == object:
             return str
         return obj.dtype
     elif isinstance(obj, (tuple, list)):
-        return getattr(obj[0], 'dtype', type(obj[0]))
+        return getattr(obj[0], "dtype", type(obj[0]))
     else:
         return type(obj)
 
@@ -455,15 +443,13 @@ def dict_update(d, u):
             else:
                 d[k] = u[k]
         else:
-            d = {k: u[k] }
+            d = {k: u[k]}
     return d
 
 
 class JSONEncoder(json.JSONEncoder):
-
     def default(self, obj):
-        """If input object is an ndarray it will be converted into a list
-        """
+        """If input object is an ndarray it will be converted into a list"""
         try:
             from pathlib import Path
         except ImportError:

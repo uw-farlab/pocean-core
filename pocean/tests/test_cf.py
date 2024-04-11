@@ -15,15 +15,18 @@ L.handlers = [logging.StreamHandler()]
 
 
 class TestCFDatasetLoad(unittest.TestCase):
-
     @pytest.mark.skip(reason="TODO: need to create a working example")
     def test_load_url(self):
-        ncd = CFDataset.load('https://geoport.whoi.edu/thredds/dodsC/usgs/data2/emontgomery/stellwagen/CF-1.6/ARGO_MERCHANT/1211-AA.cdf')
+        ncd = CFDataset.load(
+            "https://geoport.whoi.edu/thredds/dodsC/usgs/data2/emontgomery/stellwagen/CF-1.6/ARGO_MERCHANT/1211-AA.cdf"
+        )
         assert omt.is_mine(ncd) is True
         ncd.close()
 
     def test_load_strict(self):
-        ncfile = os.path.join(os.path.dirname(__file__), 'dsg', 'profile', 'resources', 'om-single.nc')
+        ncfile = os.path.join(
+            os.path.dirname(__file__), "dsg", "profile", "resources", "om-single.nc"
+        )
 
         ncd = CFDataset.load(ncfile)
         assert omt.is_mine(ncd) is False

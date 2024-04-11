@@ -4,7 +4,6 @@ from pocean.cf import CFDataset
 
 
 class IndexedRaggedTrajectory(CFDataset):
-
     def from_dataframe(cls, df, output, **kwargs):
         raise NotImplementedError
 

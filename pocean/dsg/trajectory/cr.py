@@ -25,21 +25,18 @@ from pocean.utils import (
 
 
 class ContiguousRaggedTrajectory(CFDataset):
-
     @classmethod
     def is_mine(cls, dsg, strict=False):
         try:
-            rvars = dsg.filter_by_attrs(cf_role='trajectory_id')
+            rvars = dsg.filter_by_attrs(cf_role="trajectory_id")
             assert len(rvars) == 1
-            assert dsg.featureType.lower() == 'trajectory'
+            assert dsg.featureType.lower() == "trajectory"
             assert len(dsg.t_axes()) >= 1
             assert len(dsg.x_axes()) >= 1
             assert len(dsg.y_axes()) >= 1
             assert len(dsg.z_axes()) >= 1
 
-            o_index_vars = dsg.filter_by_attrs(
-                sample_dimension=lambda x: x is not None
-            )
+            o_index_vars = dsg.filter_by_attrs(sample_dimension=lambda x: x is not None)
             assert len(o_index_vars) == 1
             assert o_index_vars[0].sample_dimension in dsg.dimensions  # Sample dimension
 
@@ -58,31 +55,32 @@ class ContiguousRaggedTrajectory(CFDataset):
 
     @classmethod
     def from_dataframe(cls, df, output, **kwargs):
-        axes = get_default_axes(kwargs.pop('axes', {}))
+        axes = get_default_axes(kwargs.pop("axes", {}))
         daxes = axes
 
         # Should never be a CR file with one trajectory so we ignore the "reduce_dims" attribute
-        _ = kwargs.pop('reduce_dims', False)  # noqa
-        unlimited = kwargs.pop('unlimited', False)
+        _ = kwargs.pop("reduce_dims", False)  # noqa
+        unlimited = kwargs.pop("unlimited", False)
 
-        unique_dims = kwargs.pop('unique_dims', False)
+        unique_dims = kwargs.pop("unique_dims", False)
         if unique_dims is True:
             # Rename the dimension to avoid a dimension and coordinate having the same name
             # which is not support in xarray
-            changed_axes = { k: '{}_dim'.format(v) for k, v in axes._asdict().items() }
+            changed_axes = {k: "{}_dim".format(v) for k, v in axes._asdict().items()}
             daxes = get_default_axes(changed_axes)
 
         # Downcast anything from int64 to int32
         # Convert any timezone aware datetimes to native UTC times
         df = downcast_dataframe(nativize_times(df))
 
-        with ContiguousRaggedTrajectory(output, 'w') as nc:
-
+        with ContiguousRaggedTrajectory(output, "w") as nc:
             trajectory_groups = df.groupby(axes.trajectory)
             unique_trajectories = list(trajectory_groups.groups.keys())
             num_trajectories = len(unique_trajectories)
             nc.createDimension(daxes.trajectory, num_trajectories)
-            trajectory = nc.createVariable(axes.trajectory, get_dtype(df[axes.trajectory]), (daxes.trajectory,))
+            trajectory = nc.createVariable(
+                axes.trajectory, get_dtype(df[axes.trajectory]), (daxes.trajectory,)
+            )
 
             # Get unique obs by grouping on traj getting the max size
             if unlimited is True:
@@ -91,13 +89,13 @@ class ContiguousRaggedTrajectory(CFDataset):
                 nc.createDimension(daxes.sample, len(df))
 
             # Number of observations in each trajectory
-            row_size = nc.createVariable('rowSize', 'i4', (daxes.trajectory,))
+            row_size = nc.createVariable("rowSize", "i4", (daxes.trajectory,))
 
-            attributes = dict_update(nc.nc_attributes(axes, daxes), kwargs.pop('attributes', {}))
+            attributes = dict_update(nc.nc_attributes(axes, daxes), kwargs.pop("attributes", {}))
 
             # Variables defined on only the trajectory axis
-            traj_vars = kwargs.pop('traj_vars', [])
-            traj_columns = [ p for p in traj_vars if p in df.columns ]
+            traj_vars = kwargs.pop("traj_vars", [])
+            traj_columns = [p for p in traj_vars if p in df.columns]
             for c in traj_columns:
                 var_name = cf_safe_name(c)
                 if var_name not in nc.variables:
@@ -123,13 +121,13 @@ class ContiguousRaggedTrajectory(CFDataset):
                     try:
                         v[i] = vvalues
                     except BaseException:
-                        L.exception('Failed to add {}'.format(c))
+                        L.exception("Failed to add {}".format(c))
                         continue
 
             # Add all of the columns based on the sample dimension. Take all columns and remove the
             # trajectory, rowSize and other trajectory based columns.
             sample_columns = [
-                f for f in df.columns if f not in traj_columns + ['rowSize', axes.trajectory]
+                f for f in df.columns if f not in traj_columns + ["rowSize", axes.trajectory]
             ]
             for c in sample_columns:
                 var_name = cf_safe_name(c)
@@ -149,26 +147,28 @@ class ContiguousRaggedTrajectory(CFDataset):
                     else:
                         v[:] = vvalues.reshape(v.shape)
                 except BaseException:
-                    L.exception('Failed to add {}'.format(c))
+                    L.exception("Failed to add {}".format(c))
                     continue
 
             # Metadata variables
-            if 'crs' not in nc.variables:
-                nc.createVariable('crs', 'i4')
+            if "crs" not in nc.variables:
+                nc.createVariable("crs", "i4")
 
             # Set attributes
             nc.update_attributes(attributes)
 
         return ContiguousRaggedTrajectory(output, **kwargs)
 
-    def calculated_metadata(self, df=None, geometries=True, clean_cols=True, clean_rows=True, **kwargs):
-        axes = get_default_axes(kwargs.pop('axes', {}))
+    def calculated_metadata(
+        self, df=None, geometries=True, clean_cols=True, clean_rows=True, **kwargs
+    ):
+        axes = get_default_axes(kwargs.pop("axes", {}))
         if df is None:
             df = self.to_dataframe(clean_cols=clean_cols, clean_rows=clean_rows, axes=axes)
         return trajectory_calculated_metadata(df, axes, geometries)
 
     def to_dataframe(self, clean_cols=True, clean_rows=True, **kwargs):
-        axes = get_default_axes(kwargs.pop('axes', {}))
+        axes = get_default_axes(kwargs.pop("axes", {}))
 
         axv = get_mapped_axes_variables(self, axes)
 
@@ -176,7 +176,7 @@ class ContiguousRaggedTrajectory(CFDataset):
         if not o_index_var:
             raise ValueError(
                 'Could not find the "sample_dimension" attribute on any variables, '
-                'is this a valid {}?'.format(self.__class__.__name__)
+                "is this a valid {}?".format(self.__class__.__name__)
             )
         else:
             o_index_var = o_index_var[0]
@@ -191,10 +191,7 @@ class ContiguousRaggedTrajectory(CFDataset):
         # time
         time_data = get_masked_datetime_array(axv.t[:], axv.t).flatten()
 
-        df_data = OrderedDict([
-            (axes.t, time_data),
-            (axes.trajectory, traj_data)
-        ])
+        df_data = OrderedDict([(axes.t, time_data), (axes.trajectory, traj_data)])
 
         building_index_to_drop = np.ones(o_dim.size, dtype=bool)
 
@@ -204,7 +201,6 @@ class ContiguousRaggedTrajectory(CFDataset):
         del extract_vars[axes.t]
 
         for i, (dnam, dvar) in enumerate(extract_vars.items()):
-
             # Trajectory dimensions
             if dvar.dimensions == t_dim:
                 vdata = np.repeat(generic_masked(dvar[:], attrs=self.vatts(dnam)), row_sizes)
@@ -221,7 +217,11 @@ class ContiguousRaggedTrajectory(CFDataset):
                         L.warning("Skipping variable {} that is completely masked".format(dnam))
                         continue
                 else:
-                    L.warning("Skipping variable {} since it didn't match any dimension sizes".format(dnam))
+                    L.warning(
+                        "Skipping variable {} since it didn't match any dimension sizes".format(
+                            dnam
+                        )
+                    )
                     continue
 
             # Mark rows with data so we don't remove them with clear_rows
@@ -238,7 +238,7 @@ class ContiguousRaggedTrajectory(CFDataset):
 
         # Drop all data columns with no data
         if clean_cols:
-            df = df.dropna(axis=1, how='all')
+            df = df.dropna(axis=1, how="all")
 
         # Drop all data rows with no data variable data
         if clean_rows:
@@ -248,31 +248,19 @@ class ContiguousRaggedTrajectory(CFDataset):
 
     def nc_attributes(self, axes, daxes):
         atts = super(ContiguousRaggedTrajectory, self).nc_attributes()
-        return dict_update(atts, {
-            'global' : {
-                'featureType': 'trajectory',
-                'cdm_data_type': 'Trajectory'
+        return dict_update(
+            atts,
+            {
+                "global": {"featureType": "trajectory", "cdm_data_type": "Trajectory"},
+                axes.trajectory: {
+                    "cf_role": "trajectory_id",
+                    "long_name": "trajectory identifier",
+                    "ioos_category": "identifier",
+                },
+                axes.x: {"axis": "X"},
+                axes.y: {"axis": "Y"},
+                axes.z: {"axis": "Z"},
+                axes.t: {"units": self.default_time_unit, "standard_name": "time", "axis": "T"},
+                "rowSize": {"sample_dimension": daxes.sample},
             },
-            axes.trajectory: {
-                'cf_role': 'trajectory_id',
-                'long_name' : 'trajectory identifier',
-                'ioos_category': 'identifier'
-            },
-            axes.x: {
-                'axis': 'X'
-            },
-            axes.y: {
-                'axis': 'Y'
-            },
-            axes.z: {
-                'axis': 'Z'
-            },
-            axes.t: {
-                'units': self.default_time_unit,
-                'standard_name': 'time',
-                'axis': 'T'
-            },
-            'rowSize': {
-                'sample_dimension': daxes.sample
-            }
-        })
+        )
