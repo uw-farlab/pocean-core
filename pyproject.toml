@@ -2,7 +2,7 @@
 build-backend = "setuptools.build_meta"
 requires = [
   "setuptools>=42",
-  "setuptools_scm[toml]>=3.4",
+  "setuptools-scm[toml]>=3.4",
   "wheel",
 ]
 
@@ -10,9 +10,9 @@ requires = [
 name = "pocean-core"
 description = "A python framework for working with met-ocean data"
 readme = "README.md"
-license = {file = "LICENSE.txt"}
+license = { file = "LICENSE.txt" }
 authors = [
-    {name = "Kyle Wilcox", email = "kyle@axds.co"},
+  { name = "Kyle Wilcox", email = "kyle@axds.co" },
 ]
 requires-python = ">=3.8"
 classifiers = [
@@ -36,13 +36,14 @@ dependencies = [
   "shapely>=1.8",
   "simplejson",
 ]
-[project.urls]
-documentation = "https://pyoceans.github.io/pocean-core"
-homepage = "https://pypi.org/project/pocean-core/"
-repository = "https://github.com/pyoceans/pocean-core"
+urls.documentation = "https://pyoceans.github.io/pocean-core"
+urls.homepage = "https://pypi.org/project/pocean-core/"
+urls.repository = "https://github.com/pyoceans/pocean-core"
 
 [tool.setuptools]
-packages = ["pocean"]
+packages = [
+  "pocean",
+]
 
 [tool.setuptools_scm]
 write_to = "pocean/_version.py"
@@ -50,23 +51,22 @@ write_to_template = "__version__ = '{version}'"
 
 [tool.ruff]
 
-lint.select = [
-  "E", # pycodecstyle
-  "W", # pydocstyle
-  "F", # flakes
-  "I", # import sorting
-]
+line-length = 100
 
 exclude = [
   ".git",
-  "docs/",
   ".git/",
   "__pycache__",
   "dist",
+  "docs/",
 ]
 
-line-length = 100
-
+lint.select = [
+  "E", # pycodecstyle
+  "F", # flakes
+  "I", # import sorting
+  "W", # pydocstyle
+]
 
 lint.ignore = [
   #"E265",
@@ -79,18 +79,15 @@ lint.ignore = [
   #"E251",
   #"W504",
   "E501",
-  "W293",
   "W291",
+  "W293",
 ]
 
-[tool.ruff.lint.per-file-ignores]
-"pocean/tests/*.py" = [
+lint.per-file-ignores."pocean/tests/*.py" = [
   "F403",
   "F405",
 ]
-
-[tool.ruff.lint.isort]
-order-by-type = false
+lint.isort.order-by-type = false
 
 [tool.pytest.ini_options]
 addopts = "-s -rxs -v"
